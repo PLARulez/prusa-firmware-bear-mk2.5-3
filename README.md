@@ -1,3 +1,11 @@
+This version of the Prusa Firmware is meant to be run on a MK2.5 Bear frame with the Einsy RAMBo board.
+I am using two power supplies for this: the original 12V PSU from the Prusa MK2 powering the 12V MK52 print bed and a Meanwell RSP-320-24 powering everything else with 24V.
+
+Bear frame variant by https://github.com/gregsaun: https://github.com/gregsaun/prusa_i3_bear_upgrade/tree/master/full_upgrade/for_mk2.5
+
+
+Original Prusa README to follow:
+
 # Table of contents
 
 <!--ts-->
