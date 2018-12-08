@@ -57,10 +57,10 @@
 #define MANUAL_Z_HOME_POS 0.2
 
 // Travel limits after homing
-#define X_MAX_POS 250
+#define X_MAX_POS 255
 #define X_MIN_POS 0
-#define Y_MAX_POS 210
-#define Y_MIN_POS -4
+#define Y_MAX_POS 212.5
+#define Y_MIN_POS -4 //orig -4
 #define Z_MAX_POS 210
 #define Z_MIN_POS 0.15
 
@@ -183,7 +183,7 @@
 #define CMD_DIAGNOSTICS //Show cmd queue length on printer display
 #endif /* DEBUG_BUILD */
 
-#define FSENSOR_QUALITY
+//#define FSENSOR_QUALITY
 
 
 #define LINEARITY_CORRECTION
@@ -257,9 +257,11 @@
 //new settings is possible for vsense = 1, running current value > 31 set vsense to zero and shift both currents by 1 bit right (Z axis only)
 #define TMC2130_CURRENTS_H {16, 20, 35, 30}  // default holding currents for all axes
 #define TMC2130_CURRENTS_R {16, 20, 35, 30}  // default running currents for all axes
-#define TMC2130_UNLOAD_CURRENT_R 12			 // lowe current for M600 to protect filament sensor 
+#define TMC2130_UNLOAD_CURRENT_R 12       // lowe current for M600 to protect filament sensor 
 
 #define TMC2130_STEALTH_Z
+
+//#define TMC2130_SERVICE_CODES_M910_M918
 
 //#define TMC2130_DEBUG
 //#define TMC2130_DEBUG_WR
@@ -339,12 +341,13 @@
 #define FILAMENTCHANGE_FIRSTRETRACT -2
 #define FILAMENTCHANGE_FINALRETRACT -80
 
-#define FILAMENTCHANGE_FIRSTFEED 70
-#define FILAMENTCHANGE_FINALFEED 50
+#define FILAMENTCHANGE_FIRSTFEED 70 //E distance in mm for fast filament loading sequence used used in filament change (M600)
+#define FILAMENTCHANGE_FINALFEED 25 //E distance in mm for slow filament loading sequence used used in filament change (M600) and filament load (M701) 
 #define FILAMENTCHANGE_RECFEED 5
 
 #define FILAMENTCHANGE_XYFEED 50
-#define FILAMENTCHANGE_EFEED 20
+#define FILAMENTCHANGE_EFEED_FIRST 20 // feedrate in mm/s for fast filament loading sequence used in filament change (M600)
+#define FILAMENTCHANGE_EFEED_FINAL 3.3f // feedrate in mm/s for slow filament loading sequence used in filament change (M600) and filament load (M701) 
 //#define FILAMENTCHANGE_RFEED 400
 #define FILAMENTCHANGE_RFEED 7000 / 60
 #define FILAMENTCHANGE_EXFEED 2
@@ -374,16 +377,8 @@
  MOTOR CURRENT SETTINGS
  *------------------------------------*/
 
-// Motor Current setting for BIG RAMBo
-#define DIGIPOT_MOTOR_CURRENT {135,135,135,135,135} // Values 0-255 (RAMBO 135 = ~0.75A, 185 = ~1A)
-#define DIGIPOT_MOTOR_CURRENT_LOUD {135,135,135,135,135}
-
-// Motor Current settings for RAMBo mini PWM value = MotorCurrentSetting * 255 / range
-#if MOTHERBOARD == BOARD_RAMBO_MINI_1_0 || MOTHERBOARD == BOARD_RAMBO_MINI_1_3
-#define MOTOR_CURRENT_PWM_RANGE 2000
-#define DEFAULT_PWM_MOTOR_CURRENT  {400, 750, 750} // {XY,Z,E}
-#define DEFAULT_PWM_MOTOR_CURRENT_LOUD  {400, 750, 750} // {XY,Z,E}
-#endif
+// Motor Current settings for Einsy/tmc = 0..63
+#define MOTOR_CURRENT_PWM_RANGE 63
 
 /*------------------------------------
  BED SETTINGS
@@ -616,6 +611,8 @@
 
 //#define SUPPORT_VERBOSITY
 
+#define MMU_REQUIRED_FW_BUILDNR 83
+#define MMU_HWRESET
 //#define MMU_DEBUG //print communication between MMU2 and printer on serial
 
 #endif //__CONFIGURATION_PRUSA_H
