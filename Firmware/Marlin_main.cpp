@@ -2933,8 +2933,8 @@ bool gcode_M45(bool onlyZ, int8_t verbosity_level)
         plan_buffer_line_curposXYZE(homing_feedrate[Z_AXIS] / 40);
         st_synchronize();
 
-    SERIAL_PROTOCOLPGM("MESH_HOME_Z_SEARCH");
-    SERIAL_PROTOCOLLN("");
+    SERIAL_PROTOCOLPGM("MESH_HOME_Z_SEARCH:");
+    SERIAL_PROTOCOLLN(MESH_HOME_Z_SEARCH);
 
 		// Move the print head close to the bed.
 		current_position[Z_AXIS] = MESH_HOME_Z_SEARCH;
@@ -2952,17 +2952,17 @@ bool gcode_M45(bool onlyZ, int8_t verbosity_level)
 #endif //TMC2130
 		enable_endstops(endstops_enabled);
 
-    SERIAL_PROTOCOLPGM("MESH_HOME_Z_SEARCH");
-    SERIAL_PROTOCOL(MESH_HOME_Z_SEARCH - HOME_Z_SEARCH_THRESHOLD);
-    SERIAL_PROTOCOLPGM(">=");
-    SERIAL_PROTOCOL(current_position[Z_AXIS]);
-    SERIAL_PROTOCOLPGM(">=");
-    SERIAL_PROTOCOL(MESH_HOME_Z_SEARCH + HOME_Z_SEARCH_THRESHOLD);
-    SERIAL_PROTOCOLLN("");
-
 		if ((st_get_position_mm(Z_AXIS) <= (MESH_HOME_Z_SEARCH + HOME_Z_SEARCH_THRESHOLD)) &&
 		    (st_get_position_mm(Z_AXIS) >= (MESH_HOME_Z_SEARCH - HOME_Z_SEARCH_THRESHOLD)))
 		{
+      SERIAL_PROTOCOLPGM("MESH_HOME_Z_SEARCH OK: ");
+      SERIAL_PROTOCOL(MESH_HOME_Z_SEARCH - HOME_Z_SEARCH_THRESHOLD);
+      SERIAL_PROTOCOLPGM(">=");
+      SERIAL_PROTOCOL(current_position[Z_AXIS]);
+      SERIAL_PROTOCOLPGM(">=");
+      SERIAL_PROTOCOL(MESH_HOME_Z_SEARCH + HOME_Z_SEARCH_THRESHOLD);
+      SERIAL_PROTOCOLLN("");
+
 			if (onlyZ)
 			{
 				clean_up_after_endstop_move(l_feedmultiply);
@@ -3037,6 +3037,14 @@ bool gcode_M45(bool onlyZ, int8_t verbosity_level)
 		}
 		else
 		{
+      SERIAL_PROTOCOLPGM("MESH_HOME_Z_SEARCH FAILED: ");
+      SERIAL_PROTOCOL(MESH_HOME_Z_SEARCH - HOME_Z_SEARCH_THRESHOLD);
+      SERIAL_PROTOCOLPGM(">=");
+      SERIAL_PROTOCOL(current_position[Z_AXIS]);
+      SERIAL_PROTOCOLPGM(">=");
+      SERIAL_PROTOCOL(MESH_HOME_Z_SEARCH + HOME_Z_SEARCH_THRESHOLD);
+      SERIAL_PROTOCOLLN("");
+
 			lcd_show_fullscreen_message_and_wait_P(PSTR("Calibration failed! Check the axes and run again."));
 			final_result = false;
 		}
