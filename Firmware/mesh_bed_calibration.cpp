@@ -967,6 +967,8 @@ inline bool find_bed_induction_sensor_point_z(float minimum_z, uint8_t n_iter, i
     update_current_position_z();
     if (! endstop_z_hit_on_purpose())
 	{
+    SERIAL_PROTOCOLPGM("!endstop_z_hit_on_purpose - before for");
+    SERIAL_PROTOCOLLN("");
 		//printf_P(PSTR("endstop not hit 1, current_pos[Z]: %f \n"), current_position[Z_AXIS]);
 		goto error;
 	}
@@ -985,11 +987,11 @@ inline bool find_bed_induction_sensor_point_z(float minimum_z, uint8_t n_iter, i
 		go_to_current(homing_feedrate[Z_AXIS]/60);
 		// Move back down slowly to find bed.
         current_position[Z_AXIS] = minimum_z;
-		//printf_P(PSTR("init Z = %f, min_z = %f, i = %d\n"), z_bckp, minimum_z, i);
+		printf_P(PSTR("init Z = %f, min_z = %f, i = %d\n"), z_bckp, minimum_z, i);
         go_to_current(homing_feedrate[Z_AXIS]/(4*60));
         // we have to let the planner know where we are right now as it is not where we said to go.
         update_current_position_z();
-		//printf_P(PSTR("Zs: %f, Z: %f, delta Z: %f"), z_bckp, current_position[Z_AXIS], (z_bckp - current_position[Z_AXIS]));
+		printf_P(PSTR("Zs: %f, Z: %f, delta Z: %f"), z_bckp, current_position[Z_AXIS], (z_bckp - current_position[Z_AXIS]));
 		if (abs(current_position[Z_AXIS] - z_bckp) < 0.025) {
 			//printf_P(PSTR("PINDA triggered immediately, move Z higher and repeat measurement\n")); 
 			current_position[Z_AXIS] += 0.5;
@@ -1004,6 +1006,8 @@ inline bool find_bed_induction_sensor_point_z(float minimum_z, uint8_t n_iter, i
 
 		if (!endstop_z_hit_on_purpose())
 		{
+      SERIAL_PROTOCOLPGM("!endstop_z_hit_on_purpose - inside for");
+      SERIAL_PROTOCOLLN("");
 			//printf_P(PSTR("i = %d, endstop not hit 2, current_pos[Z]: %f \n"), i, current_position[Z_AXIS]);
 			goto error;
 		}
@@ -1013,16 +1017,16 @@ inline bool find_bed_induction_sensor_point_z(float minimum_z, uint8_t n_iter, i
 			goto error; //crash Z detected
 		}
 #endif //TMC2130
-//        SERIAL_ECHOPGM("Bed find_bed_induction_sensor_point_z low, height: ");
-//        MYSERIAL.print(current_position[Z_AXIS], 5);
-//        SERIAL_ECHOLNPGM("");
+        SERIAL_ECHOPGM("Bed find_bed_induction_sensor_point_z low, height: ");
+        MYSERIAL.print(current_position[Z_AXIS], 5);
+        SERIAL_ECHOLNPGM("");
 		float dz = i?abs(current_position[Z_AXIS] - (z / i)):0;
         z += current_position[Z_AXIS];
-		//printf_P(PSTR("Z[%d] = %d, dz=%d\n"), i, (int)(current_position[Z_AXIS] * 1000), (int)(dz * 1000));
-		//printf_P(PSTR("Z- measurement deviation from avg value %f um\n"), dz);
+		printf_P(PSTR("Z[%d] = %d, dz=%d\n"), i, (int)(current_position[Z_AXIS] * 1000), (int)(dz * 1000));
+		printf_P(PSTR("Z- measurement deviation from avg value %f um\n"), dz);
 		if (dz > 0.05) { //deviation > 50um
 			if (high_deviation_occured == false) { //first occurence may be caused in some cases by mechanic resonance probably especially if printer is placed on unstable surface 
-				//printf_P(PSTR("high dev. first occurence\n"));
+				printf_P(PSTR("high dev. first occurence\n"));
 				delay_keep_alive(500); //damping
 				//start measurement from the begining, but this time with higher movements in Z axis which should help to reduce mechanical resonance
 				high_deviation_occured = true;
@@ -1030,10 +1034,11 @@ inline bool find_bed_induction_sensor_point_z(float minimum_z, uint8_t n_iter, i
 				z = 0;
 			}
 			else {
-				goto error;
+        //Error ignored, build some other code here
+				//goto error;
 			}
 		}
-		//printf_P(PSTR("PINDA triggered at %f\n"), current_position[Z_AXIS]);
+		printf_P(PSTR("PINDA triggered at %f\n"), current_position[Z_AXIS]);
     }
     current_position[Z_AXIS] = z;
     if (n_iter > 1)
@@ -1042,7 +1047,7 @@ inline bool find_bed_induction_sensor_point_z(float minimum_z, uint8_t n_iter, i
 
     enable_endstops(endstops_enabled);
     enable_z_endstop(endstop_z_enabled);
-//    SERIAL_ECHOLNPGM("find_bed_induction_sensor_point_z 3");
+    SERIAL_ECHOLNPGM("find_bed_induction_sensor_point_z 3");
 #ifdef TMC2130
 	FORCE_HIGH_POWER_END;
 #endif
@@ -1050,7 +1055,7 @@ inline bool find_bed_induction_sensor_point_z(float minimum_z, uint8_t n_iter, i
 	return true;
 
 error:
-//    SERIAL_ECHOLNPGM("find_bed_induction_sensor_point_z 4");
+    SERIAL_ECHOLNPGM("find_bed_induction_sensor_point_z 4");
     enable_endstops(endstops_enabled);
     enable_z_endstop(endstop_z_enabled);
 #ifdef TMC2130
@@ -2469,6 +2474,7 @@ BedSkewOffsetDetectionResultType find_bed_offset_and_skew(int8_t verbosity_level
 	return result;    
 }
 
+#define MESH_BED_CALIBRATION_SHOW_LCD
 #ifndef NEW_XYZCAL
 BedSkewOffsetDetectionResultType improve_bed_offset_and_skew(int8_t method, int8_t verbosity_level, uint8_t &too_far_mask)
 {
@@ -2809,6 +2815,9 @@ void go_home_with_z_lift()
 // Returns false if the reference values are more than 3mm far away.
 bool sample_mesh_and_store_reference()
 {
+    SERIAL_PROTOCOLPGM("sample_mesh_and_store_reference");
+    SERIAL_PROTOCOLLN("");
+
     bool endstops_enabled  = enable_endstops(false);
     bool endstop_z_enabled = enable_z_endstop(false);
 
@@ -2888,16 +2897,21 @@ bool sample_mesh_and_store_reference()
         // Verify the span of the Z values.
         float zmin = mbl.z_values[0][0];
         float zmax = zmin;
-        for (int8_t j = 0; j < 3; ++ j)
+        SERIAL_PROTOCOLLNPGM("Z Values:");
+        for (int8_t j = 0; j < 3; ++ j){
            for (int8_t i = 0; i < 3; ++ i) {
                 zmin = min(zmin, mbl.z_values[j][i]);
                 zmax = max(zmax, mbl.z_values[j][i]);
+                MYSERIAL.print(mbl.z_values[j][i], 5);
+                SERIAL_PROTOCOL(" ");
            }
+           SERIAL_PROTOCOLLN("");
+        }
         if (zmax - zmin > 3.f) {
             // The span of the Z offsets is extreme. Give up.
             // Homing failed on some of the points.
             SERIAL_PROTOCOLLNPGM("Exreme span of the Z values!");
-            return false;
+            //return false;
         }
     }
 

@@ -650,7 +650,7 @@ void failstats_reset_print()
 #endif
 }
 
-
+#define MESH_BED_CALIBRATION_SHOW_LCD
 
 #ifdef MESH_BED_LEVELING
    enum MeshLevelingState { MeshReport, MeshStart, MeshNext, MeshSet };
@@ -854,7 +854,7 @@ void show_fw_version_warnings() {
     lcd_puts_at_P(0, 1, PSTR("May destroy printer!"));
     lcd_puts_at_P(0, 2, PSTR("ver ")); lcd_puts_P(PSTR(FW_VERSION_FULL));
     lcd_puts_at_P(0, 3, PSTR(FW_REPOSITORY));
-    lcd_wait_for_click();
+//    lcd_wait_for_click();
     break;
 //	default: lcd_show_fullscreen_message_and_wait_P(_i("WARNING: This is an unofficial, unsupported build. Use at your own risk!")); break;////MSG_FW_VERSION_UNKNOWN c=20 r=8
 	}
@@ -2831,6 +2831,8 @@ void adjust_bed_reset()
 //! @retval false Failed
 bool gcode_M45(bool onlyZ, int8_t verbosity_level)
 {
+  SERIAL_PROTOCOLPGM("Received M45");
+  SERIAL_PROTOCOLLN("");
 	bool final_result = false;
 	#ifdef TMC2130
 	FORCE_HIGH_POWER_START;
@@ -2865,6 +2867,9 @@ bool gcode_M45(bool onlyZ, int8_t verbosity_level)
 	lcd_display_message_fullscreen_P(_T(MSG_AUTO_HOME));
 	home_xy();
 
+  SERIAL_PROTOCOLPGM("home_xy");
+  SERIAL_PROTOCOLLN("");
+
 	enable_endstops(false);
 	current_position[X_AXIS] += 5;
 	current_position[Y_AXIS] += 5;
@@ -2881,7 +2886,12 @@ bool gcode_M45(bool onlyZ, int8_t verbosity_level)
 #endif //TMC2130
 		
 		lcd_show_fullscreen_message_and_wait_P(_T(MSG_CONFIRM_NOZZLE_CLEAN));
+    SERIAL_PROTOCOLPGM("MSG_CONFIRM_NOZZLE_CLEAN");
+    SERIAL_PROTOCOLLN("");
 		if(onlyZ){
+      SERIAL_PROTOCOLPGM("home_xy");
+      SERIAL_PROTOCOLLN("");
+
 			lcd_display_message_fullscreen_P(_T(MSG_MEASURE_BED_REFERENCE_HEIGHT_LINE1));
 			lcd_set_cursor(0, 3);
 			lcd_print(1);
@@ -2898,6 +2908,8 @@ bool gcode_M45(bool onlyZ, int8_t verbosity_level)
 		#ifndef STEEL_SHEET
 		if (((degHotend(0) > MAX_HOTEND_TEMP_CALIBRATION) || (degBed() > MAX_BED_TEMP_CALIBRATION)) && (!onlyZ))
 		{
+      SERIAL_PROTOCOLPGM("lcd_wait_for_cool_down");
+      SERIAL_PROTOCOLLN("");
 			lcd_wait_for_cool_down();
 		}
 		#endif //STEEL_SHEET
@@ -2921,6 +2933,9 @@ bool gcode_M45(bool onlyZ, int8_t verbosity_level)
         plan_buffer_line_curposXYZE(homing_feedrate[Z_AXIS] / 40);
         st_synchronize();
 
+    SERIAL_PROTOCOLPGM("MESH_HOME_Z_SEARCH");
+    SERIAL_PROTOCOLLN("");
+
 		// Move the print head close to the bed.
 		current_position[Z_AXIS] = MESH_HOME_Z_SEARCH;
 
@@ -2936,6 +2951,14 @@ bool gcode_M45(bool onlyZ, int8_t verbosity_level)
 		tmc2130_home_exit();
 #endif //TMC2130
 		enable_endstops(endstops_enabled);
+
+    SERIAL_PROTOCOLPGM("MESH_HOME_Z_SEARCH");
+    SERIAL_PROTOCOL(MESH_HOME_Z_SEARCH - HOME_Z_SEARCH_THRESHOLD);
+    SERIAL_PROTOCOLPGM(">=");
+    SERIAL_PROTOCOL(current_position[Z_AXIS]);
+    SERIAL_PROTOCOLPGM(">=");
+    SERIAL_PROTOCOL(MESH_HOME_Z_SEARCH + HOME_Z_SEARCH_THRESHOLD);
+    SERIAL_PROTOCOLLN("");
 
 		if ((st_get_position_mm(Z_AXIS) <= (MESH_HOME_Z_SEARCH + HOME_Z_SEARCH_THRESHOLD)) &&
 		    (st_get_position_mm(Z_AXIS) >= (MESH_HOME_Z_SEARCH - HOME_Z_SEARCH_THRESHOLD)))
@@ -4538,7 +4561,7 @@ if(eSoundMode!=e_SOUND_MODE_SILENT)
 
             feedrate = homing_feedrate[Z_AXIS];
 
-            find_bed_induction_sensor_point_z(-10.f, 3);
+            find_bed_induction_sensor_point_z(-10.f, Z_NPROBERETRY);
 
 			printf_P(_N("%S X: %.5f Y: %.5f Z: %.5f\n"), _T(MSG_BED), _x, _y, _z);
 
@@ -4903,7 +4926,7 @@ if(eSoundMode!=e_SOUND_MODE_SILENT)
 			nMeasPoints = eeprom_read_byte((uint8_t*)EEPROM_MBL_POINTS_NR);
 		}
 
-		uint8_t nProbeRetry = 3;
+		uint8_t nProbeRetry = Z_NPROBERETRY;
 		if (code_seen('R')) {
 			nProbeRetry = code_value_uint8();
 			if (nProbeRetry > 10) {
