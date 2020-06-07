@@ -5057,7 +5057,7 @@ if(eSoundMode!=e_SOUND_MODE_SILENT)
 			st_synchronize();
 
 			// Go down until endstop is hit
-			const float Z_CALIBRATION_THRESHOLD = 1.f;
+			const float Z_CALIBRATION_THRESHOLD = 7.f;//1.f;
 			if (!find_bed_induction_sensor_point_z((has_z && mesh_point > 0) ? z0 - Z_CALIBRATION_THRESHOLD : -10.f, nProbeRetry)) { //if we have data from z calibration max allowed difference is 1mm for each point, if we dont have data max difference is 10mm from initial point  
 				printf_P(_T(MSG_BED_LEVELING_FAILED_POINT_LOW));
 				break;
@@ -5078,6 +5078,11 @@ if(eSoundMode!=e_SOUND_MODE_SILENT)
 				}
 			}
 			if (has_z && fabs(z0 - current_position[Z_AXIS]) > Z_CALIBRATION_THRESHOLD) { //if we have data from z calibration, max. allowed difference is 1mm for each point
+        SERIAL_ECHOPGM("z0: ");
+        MYSERIAL.print(z0, 5);
+        SERIAL_ECHOPGM("current_position[Z_AXIS]: ");
+        MYSERIAL.print(current_position[Z_AXIS], 5);
+        SERIAL_ECHOLN("");
 				printf_P(PSTR("Bed leveling failed. Sensor triggered too high.\n"));
 				break;
 			}

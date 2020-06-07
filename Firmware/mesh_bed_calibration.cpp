@@ -940,6 +940,29 @@ static inline void update_current_position_z()
 
 // At the current position, find the Z stop.
 
+static inline bool endstop_z_hit_on_purpose_retry(int retries = 5, float minimum_z = -10.f)
+{
+  bool hit = false;
+  while(retries > 0 && !hit){
+    hit = endstop_z_hit_on_purpose();
+    retries--;
+    if(!hit){
+      SERIAL_PROTOCOLLN("");
+      SERIAL_PROTOCOLPGM("!hit, retries:");
+      SERIAL_PROTOCOLLN(retries);
+      current_position[Z_AXIS] += 5;
+      go_to_current(homing_feedrate[Z_AXIS]/60);
+      // move down until you find the bed
+      current_position[Z_AXIS] = minimum_z;
+      go_to_current(homing_feedrate[Z_AXIS]/60);
+      // we have to let the planner know where we are right now as it is not where we said to go.
+      update_current_position_z();
+    }
+  }
+
+  return hit;
+}
+
 inline bool find_bed_induction_sensor_point_z(float minimum_z, uint8_t n_iter, int
 #ifdef SUPPORT_VERBOSITY
     verbosity_level
@@ -965,7 +988,7 @@ inline bool find_bed_induction_sensor_point_z(float minimum_z, uint8_t n_iter, i
     go_to_current(homing_feedrate[Z_AXIS]/60);
     // we have to let the planner know where we are right now as it is not where we said to go.
     update_current_position_z();
-    if (! endstop_z_hit_on_purpose())
+    if (!endstop_z_hit_on_purpose_retry())
 	{
     SERIAL_PROTOCOLPGM("!endstop_z_hit_on_purpose - before for");
     SERIAL_PROTOCOLLN("");
@@ -1004,7 +1027,7 @@ inline bool find_bed_induction_sensor_point_z(float minimum_z, uint8_t n_iter, i
 
 
 
-		if (!endstop_z_hit_on_purpose())
+		if (!endstop_z_hit_on_purpose_retry())
 		{
       SERIAL_PROTOCOLPGM("!endstop_z_hit_on_purpose - inside for");
       SERIAL_PROTOCOLLN("");
